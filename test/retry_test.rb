@@ -326,4 +326,11 @@ class RetryTest < Minitest::Test
       assert_nil @worker.reserve
     end
   end
+
+  # If :retried is available call this method to retry a job
+  def test_try_again_custom_retried
+    Resque.enqueue(RetriedMethodJob, 'foo' => 'bar')
+    RetriedMethodJob.expects(:retried).once.with(:testing, 0, RetriedMethodJob, 'foo' => 'bar')
+    perform_next_job(@worker)
+  end
 end

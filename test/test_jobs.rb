@@ -56,6 +56,11 @@ class RetryDefaultsJob
   end
 end
 
+class RetriedMethodJob < RetryDefaultsJob
+  @queue = :testing
+  def self.retried(_, _, _, *_); end
+end
+
 class SleepDelay1SecondJob < RetryDefaultsJob
   @queue = :testing
   @sleep_after_requeue = 1

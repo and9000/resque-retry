@@ -429,11 +429,16 @@ module Resque
 
         retry_args = retry_args_for_exception(exception, *args)
 
-        if temp_retry_delay <= 0
-          # If the delay is 0, no point passing it through the scheduler
-          Resque.enqueue_to(retry_in_queue, retry_job_class, *retry_args)
+        # If retry_job_class implements :retried call this method to enqueue job
+        if retry_job_class.respond_to?(:retried)
+          retry_job_class.send(:retried, retry_in_queue, temp_retry_delay, retry_job_class, *retry_args)
         else
-          Resque.enqueue_in_with_queue(retry_in_queue, temp_retry_delay, retry_job_class, *retry_args)
+          if temp_retry_delay <= 0
+            # If the delay is 0, no point passing it through the scheduler
+            Resque.enqueue_to(retry_in_queue, retry_job_class, *retry_args)
+          else
+            Resque.enqueue_in_with_queue(retry_in_queue, temp_retry_delay, retry_job_class, *retry_args)
+          end
         end
 
         # remove retry key from redis if we handed retry off to another queue.
